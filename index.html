@@ -1500,7 +1500,7 @@ body {
           <div class="accordion-body">
             <ul class="nav flex-column nav-underline">
               <li class="nav-item">
-                <a class="nav-link" href="#binning-coverage">Binning coverage</a>
+                <a class="nav-link" href="#binning-coverage">Binning read depth</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#depth-of-two-strands">Read depth of two strands</a>
@@ -2235,10 +2235,10 @@ body {
     <h2>Genome Coverage</h2>
 
     <article id="binning-coverage">
-        <h3>Binning coverage</h3>
+        <h3>Binning read depth</h3>
         <p>
-            Each point represents the mean coverage depth of each 100k bp
-            binning window. The outliers are truncated <em>y</em>-axis limit.
+            Each point represents the mean coverage depth of each 165.98 Kbp
+            binning window.
         </p>
 
         <div class="row">
@@ -2262,8 +2262,7 @@ body {
                 <div class="col-auto">
                     <img src="img/depth-bin-single.png" alt="" id="img-depth-bin" />
                     <div class="caption" link="#img-depth-bin">
-                        Check the uniformness of coverage depth of each strand and
-                        whole genome.
+                        The extreme values are truncated to the <em>y</em>-axis limit of 0.99 quantile of all bins.
                     </div>
                 </div>
             </div>
@@ -2459,7 +2458,7 @@ body {
       
 
 <section id="Methylation level">
-    <h2>Methylation level</h2>
+    <h2>DNAme level</h2>
 
     <article id="meth-wholegenome">
         <h3>Whole genome</h3>
@@ -2740,7 +2739,10 @@ body {
         <p>
         <ul>
             <li>CpG depth difference = Watson depth - Crick depth </li>
-            <li>difference: mean = 0.0, sd = 24.2 </li>
+            <li>difference: mean = 0.0, sd<sup class="question-marker" id="cap-strandness-depth-diff">?</sup> = 24.2 </li>
+            <div class="caption" link="#cap-strandness-depth-diff">
+                sd = standard deviation
+            </div>
             <li>absolute difference: mean = 17.0, sd = 17.2 </li>
         </ul>
         </p>
@@ -2999,9 +3001,38 @@ body {
 
   <!-- custom JS -->
   <script type="text/javascript">
-// after loading finished
-$(function () {
 
+function setWidth(id, dpiratio = 300 / 96) {
+    let myImg = document.querySelector(id);
+    let width = myImg.naturalWidth / dpiratio;
+    widthnew = Math.min(930, Math.floor(width));
+    $(id).width(widthnew + 'px');
+}
+
+function placeCaptions() {
+    // $("#col-caption").empty();  // reset
+    $(".caption").each(function (i, e) {
+        $("#col-caption").append($(e));
+        link = $(e).attr('link');
+        pos = $(e).offset();
+        pos.top = $(link).offset().top;
+        $(e).offset(pos);
+    });
+}
+
+function resetCaptions() {
+    $(".caption").each(function (i, e) {
+        link = $(e).attr('link');
+        pos = $(e).offset();
+        pos.top = $(link).offset().top;
+        $(e).offset(pos);
+    });
+}
+
+
+// after page loading finished
+$(function () {
+    
     // add number marker to headers
     $("#main-content").children().filter('section').each(function (i, e) {
         h2 = $(e).find('h2').first();
@@ -3061,8 +3092,8 @@ $(function () {
         let context = $("input[name='radio-3']:checked").val();
         let swicth = $("#switch-3").prop('checked');
         let strand = swicth ? 'single' : 'double';
-        file = "img/meth-bin-" + context + "-" + strand + "-dp" + dp + ".png";
-        // console.log(file);
+        // file = "img/meth-bin-" + context + "-" + strand + "-dp" + dp + ".png";
+        file = `img/meth-bin-${context}-${strand}-dp${dp}.png`;
         $("#img-meth-bin").attr("src", file);
         setWidth("#img-meth-bin");
 
@@ -3071,26 +3102,40 @@ $(function () {
         } else {
             $("#legend-meth-bin").hide();
         }
+        
+        resetCaptions();
     }
-    $("#switch-3").change(img_meth_bin);
-    $("input[name='radio-3']").change(img_meth_bin);
+    $("#switch-3").on("change", img_meth_bin);
+    $("input[name='radio-3']").on("change", img_meth_bin);
 
+ 
     // binning depth
     function img_depth_bin() {
         let swicth = $("#switch-4").prop('checked');
         let strand = swicth ? 'single' : 'double';
-        file = "img/depth-bin-" + strand + ".png";
-        // console.log(file);
-        $("#img-depth-bin").attr("src", file);
-        setWidth("#img-depth-bin");
+        file = `img/depth-bin-${strand}.png`;
 
         if (swicth) {
             $("#legend-depth-bin").show();
         } else {
             $("#legend-depth-bin").hide();
-        }
+        }      
+
+        $("#img-depth-bin").attr("onload", ()=>{
+            // setWidth("#img-depth-bin");
+            resetCaptions();
+            console.log('onload');
+        } );  
+
+        $("#img-depth-bin").attr("src", file);
+        // setWidth("#img-depth-bin");
+
+
+        // resetCaptions();
     }
-    $("#switch-4").change(img_depth_bin);
+
+
+    $("#switch-4").on("change", img_depth_bin);
 
     // meth of depth >= k
     function img_cul_meth_by_dp() {
@@ -3206,24 +3251,6 @@ $(function () {
     }
     $("input[name='radio-pangene-noncoding']").change(img_pangene_noncoding);
 });
-
-function setWidth(id, dpiratio = 300 / 96) {
-    let myImg = document.querySelector(id);
-    let width = myImg.naturalWidth / dpiratio;
-    widthnew = Math.min(930, Math.floor(width));
-    $(id).width(widthnew + 'px');
-}
-
-function placeCaptions() {
-    $(".caption").each(function (i, e) {
-        $("#col-caption").append($(e));
-
-        link = $(e).attr('link');
-        pos = $(e).offset();
-        pos.top = $(link).offset().top;
-        $(e).offset(pos);
-    });
-}
 </script>
   <script type="text/javascript">
 var COLS = ["#1B98E0", "#df5353", "#ff9c33", "#f9d839", "#32a896"];
