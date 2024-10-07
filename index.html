@@ -3001,6 +3001,7 @@ body {
 
   <!-- custom JS -->
   <script type="text/javascript">
+var bin_img_is_updated = true;
 
 function setWidth(id, dpiratio = 300 / 96) {
     let myImg = document.querySelector(id);
@@ -3021,12 +3022,14 @@ function placeCaptions() {
 }
 
 function resetCaptions() {
+    if (!bin_img_is_updated) return;
     $(".caption").each(function (i, e) {
         link = $(e).attr('link');
         pos = $(e).offset();
         pos.top = $(link).offset().top;
         $(e).offset(pos);
     });
+    bin_img_is_updated = false;
 }
 
 
@@ -3102,6 +3105,7 @@ $(function () {
         } else {
             $("#legend-meth-bin").hide();
         }
+        bin_img_is_updated = true;
     }
     $("#switch-3").on("change", img_meth_bin);
     $("input[name='radio-3']").on("change", img_meth_bin);
@@ -3120,6 +3124,7 @@ $(function () {
         } else {
             $("#legend-depth-bin").hide();
         }
+        bin_img_is_updated = true;
     }    
     $("#switch-4").on("change", img_depth_bin);
 
